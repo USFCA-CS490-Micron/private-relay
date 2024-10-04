@@ -26,7 +26,7 @@ def vision():
         return jsonify({'error': f'Invalid image file: {str(e)}'}), 400
 
     try:
-        result = qp.query_vision(image)
+        result = qp.query_vision(query, image)
     except Exception as e:
         return jsonify({'error': f'Error processing image: {str({e})}'}), 500
 

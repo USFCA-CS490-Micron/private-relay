@@ -10,9 +10,8 @@ Takes a query string and image, returns analysis.
 ##### Request
 ```
 {
-    type: 'vision',
-    query: str,
-    media: image
+    query: str
+    image: image
 }
 ```
 call `vision_query(query: str, image: image) -> str`, return to client:

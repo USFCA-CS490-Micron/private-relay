@@ -9,7 +9,7 @@ class QueryProcessor:
     #       -> send image
     #       -> send query to a local model (it will figure out what's important and query-worthy)
     #       -> send local model's response to google language
-    def query_vision(self, image):
+    def query_vision(self, query, image):
         pass
 
     # TODO  this is separate because it would be nice to be able to switch providers based on relevance
