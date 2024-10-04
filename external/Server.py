@@ -32,7 +32,7 @@ def vision():
 
     return jsonify({'result': result}), 200
 
-
+  
 # Run the server
 if __name__ == '__main__':
     server.run(debug=True) # TODO remove "debug=True" once stable
