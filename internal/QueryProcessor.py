@@ -5,14 +5,13 @@ from openai import OpenAI
 from google.cloud import vision
 # pip install --upgrade google-cloud-language
 from google.cloud import language_v2
+from local_predict import predict
+from local_llm import local_llm_predict
 
 
-# query_google_vision is for calling the Google Cloud Vision API to recognize image information.
-# API setup details: https://cloud.google.com/vision/docs/setup?hl=en
-# query_google_language is for calling the Google Natural Language API to identify entity-related information in the query.
-# More details are available in the link below.
-# API setup details: https://www.cloudskillsboost.google/focuses/582?catalog_rank=%7B%22rank%22:1,%22num_filters%22:0,%22has_search%22:true%7D&parent=catalog&search_id=31485341?utm_source=cgc-site&utm_medium=et&utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_term=-
-# Combine the results of these two into a string to become the content of the system_prompt (essentially saying that I have some image information (vision_response) and some entity information from the query (language_response), and the model needs to respond to the query based on this information).
+# query_google_vision calls the Google Cloud Vision API to recognize image information. API setup details: https://cloud.google.com/vision/docs/setup?hl=zh-cn
+# query_google_language calls the Google Natural Language API to recognize entities in the query. Specific details can be found in the following link: https://www.cloudskillsboost.google/focuses/582?catalog_rank=%7B%22rank%22:1,%22num_filters%22:0,%22has_search%22:true%7D&parent=catalog&search_id=31485341?utm_source=cgc-site&utm_medium=et&utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_term=-
+# Combine the results of these two into a string, which will become the content of the system prompt (basically saying that I have some image information (vision_response), and some entity information from the query (language_response), and the model needs to return a response based on this information).
 
 
 
@@ -56,18 +55,37 @@ class QueryProcessor:
     #       -> send query to a local model (it will figure out what's important and query-worthy)
     #       -> send local model's response to google language
     def query_vision(self, query, image):
-        vision_response = self.query_google_vision(image)
-        language_response = self.query_google_language(query)
-        system_prompt = f"""
-You will answer my question based on the following information:
+        query_label = predict(query)
+        if query_label == "offline_question":
+            return local_llm_predict(query)
+        elif query_label == "basic_question":
+            pass
+        elif query_label == "complex_question":
+            language_response = self.query_google_language(query)
+            system_prompt = f"""
+            You will answer my question based on the following information:
 
-1. Image label information (vision_response): {vision_response}
-2. Relevant entity information extracted from the question (language_response): {language_response}
+            1. Relevant entity information extracted from the question (language_response): {language_response}
 
-Please synthesize the above information and accurately respond to my query. If you are uncertain about any aspects, please indicate the reasons for your uncertainty and make reasonable inferences based on the available information.
-"""
-        response = self.query_gpt(query, system_prompt)
-        return response
+            Please synthesize the above information and accurately respond to my query. If you are uncertain about any aspects, please indicate the reasons for your uncertainty and make reasonable inferences based on the available information.
+            """
+            response = self.query_gpt(query, system_prompt)
+            return response
+        elif query_label == "vision":
+            vision_response = self.query_google_vision(image)
+            language_response = self.query_google_language(query)
+            system_prompt = f"""
+    You will answer my question based on the following information:
+    
+    1. Image label information (vision_response): {vision_response}
+    2. Relevant entity information extracted from the question (language_response): {language_response}
+    
+    Please synthesize the above information and accurately respond to my query. If you are uncertain about any aspects, please indicate the reasons for your uncertainty and make reasonable inferences based on the available information.
+    """
+            response = self.query_gpt(query, system_prompt)
+            return response
+        elif query_label == "explicit":
+            return "A query which is inappropriate "
 
     # TODO  this is separate because it would be nice to be able to switch providers based on relevance
     #       for ex, if one provider is better at a task than another, we could use a switch in query_vision()

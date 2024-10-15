@@ -1,0 +1,1 @@
+#The model weights here were trained in GitHub with the settings: train=True, test=True, and passes=10
