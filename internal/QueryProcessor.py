@@ -64,6 +64,6 @@ class QueryProcessor:
         response = self.openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=prompt,
-            temperature=0.7,
+            temperature=0.0,
         )
-        return response.choices[0].message.content if response.choices else ""
+        return response.choices[0].message.content if response.choices else None
