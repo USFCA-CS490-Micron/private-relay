@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from typing import Optional
-from ..internal.QueryProcessor import QueryProcessor
+from internal.QueryProcessor import QueryProcessor
 import io
 from PIL import Image
 import uvicorn
